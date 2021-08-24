@@ -3,4 +3,4 @@ phases:
   build:
     commands:
       - sam build
-      - sam deploy --stack-name "sam-app-cicd-${ENV_NAME}"" --s3-bucket code-build-sam-test-mm --capabilities CAPABILITY_IAM
+      - sam deploy --stack-name "sam-app-cicd-${ENV_NAME}" --s3-bucket code-build-sam-test-mm --capabilities CAPABILITY_IAM
