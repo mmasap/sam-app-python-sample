@@ -1,0 +1,6 @@
+version: 0.2
+phases:
+  build:
+    commands:
+      - sam build
+      - sam deploy --stack-name sam-app-cicd --s3-bucket code-build-sam-test-mm --capabilities CAPABILITY_IAM
