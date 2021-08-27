@@ -26,6 +26,18 @@ Resources:
           Properties:
             Path: /hello
             Method: get
+            RestApiId: !Ref ApiGatewayApi
+
+  ApiGatewayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: dev
+      Domain:
+        DomainName: slowter.work
+        CertificateArn: arn:aws:acm:ap-northeast-1:799734223068:certificate/feb29196-333c-433e-bc4f-e9a2d13e0e4e
+        EndpointConfiguration: EDGE
+        Route53:
+          HostedZoneId: Z1PA6795UKMFR9
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
