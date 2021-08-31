@@ -5,6 +5,20 @@ Description: >
 
   Sample SAM Template for sam-app-cicd
 
+Parameters:
+  DomainName:
+    Type: String
+  CertificateArn:
+    Type: String
+  HostedZoneId:
+    Type: String
+  BucketName:
+    Type: String
+    Default: sam-s3-test-2021
+  TableName:
+    Type: String
+    Default: samTestTable
+
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
@@ -12,6 +26,10 @@ Globals:
     MemorySize: 512
     Runtime: python3.8
     CodeUri: src/
+    Environment:
+      Variables:
+        BUCKET_NAME: !Ref BucketName
+        TABLE_NAME: !Ref TableName
   Api:
     OpenApiVersion: 3.0.2
 
@@ -19,25 +37,71 @@ Resources:
   HelloWorldFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      Handler: app.lambda_handler
+      Handler: hello.lambda_handler
       Events:
         HelloWorld:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /hello
             Method: get
-            RestApiId: !Ref ApiGatewayApi
+            RestApiId: !Ref ApiGateway
 
-  ApiGatewayApi:
+  S3PutObjectFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Handler: s3_put_object.lambda_handler
+      Policies:
+        - S3FullAccessPolicy:
+            BucketName: !Ref BucketName
+      Events:
+        S3PutObject:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /s3/put
+            Method: get
+            RestApiId: !Ref ApiGateway
+      # AutoPublishAlias: live
+      # ProvisionedConcurrencyConfig:
+      #   ProvisionedConcurrentExecutions: 1
+      # DeploymentPreference:
+      #   Type: AllAtOnce
+
+  ReadDynamoDBFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      Handler: dynamodb.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref TableName
+      Events:
+        Read:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /dynamodb/read
+            Method: get
+            RestApiId: !Ref ApiGateway
+
+  ApiGateway:
     Type: AWS::Serverless::Api
     Properties:
       StageName: dev
       Domain:
-        DomainName: slowter.work
-        CertificateArn: arn:aws:acm:ap-northeast-1:799734223068:certificate/feb29196-333c-433e-bc4f-e9a2d13e0e4e
+        DomainName: !Ref DomainName
+        CertificateArn: !Ref CertificateArn
         EndpointConfiguration: EDGE
         Route53:
-          HostedZoneId: Z1PA6795UKMFR9
+          HostedZoneId: !Ref HostedZoneId
+
+  TestDynamoDB:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: !Ref TableName
+      PrimaryKey:
+        Name: id
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
@@ -45,7 +109,7 @@ Outputs:
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   HelloWorldApi:
     Description: 'API Gateway endpoint URL for Prod stage for Hello World function'
-    Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/'
+    Value: !Sub 'https://${DomainName}/hello/'
   HelloWorldFunction:
     Description: 'Hello World Lambda Function ARN'
     Value: !GetAtt HelloWorldFunction.Arn
