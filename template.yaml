@@ -18,6 +18,12 @@ Parameters:
   TableName:
     Type: String
     Default: samTestTable
+  CognitoUserPoolName:
+    Type: String
+    Default: userPoolTest
+  CognitoUserPoolClientName:
+    Type: String
+    Default: userPoolClientTest
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -25,11 +31,12 @@ Globals:
     Timeout: 10
     MemorySize: 512
     Runtime: python3.8
-    CodeUri: src/
+    CodeUri: src/api
     Environment:
       Variables:
         BUCKET_NAME: !Ref BucketName
         TABLE_NAME: !Ref TableName
+        COGNITO_IDENTITY_POOL_ID: ap-northeast-1_zOhYsicQJ
   Api:
     OpenApiVersion: 3.0.2
 
@@ -70,6 +77,8 @@ Resources:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       Handler: dynamodb.lambda_handler
+      Layers:
+        - !Ref MyLayer
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref TableName
@@ -91,6 +100,11 @@ Resources:
         EndpointConfiguration: EDGE
         Route53:
           HostedZoneId: !Ref HostedZoneId
+      # Auth:
+      #   DefaultAuthorizer: MyCognitoAuthorizer
+      #   Authorizers:
+      #     MyCognitoAuthorizer:
+      #       UserPoolArn: !GetAtt MyCognitoUserPool.Arn
 
   TestDynamoDB:
     Type: AWS::Serverless::SimpleTable
@@ -102,6 +116,37 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
+
+  # MyCognitoUserPool:
+  #   Type: AWS::Cognito::UserPool
+  #   Properties:
+  #     UserPoolName: !Ref CognitoUserPoolName
+  #     Policies:
+  #       PasswordPolicy:
+  #         MinimumLength: 8
+  #     UsernameAttributes:
+  #       - email
+  #     Schema:
+  #       - AttributeDataType: String
+  #         Name: email
+  #         Required: false
+
+  # MyCognitoUserPoolClient:
+  #   Type: AWS::Cognito::UserPoolClient
+  #   Properties:
+  #     UserPoolId: !Ref MyCognitoUserPool
+  #     ClientName: !Ref CognitoUserPoolClientName
+  #     GenerateSecret: false
+
+  MyLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      Description: Layer description
+      ContentUri: src/layer
+      CompatibleRuntimes:
+        - python3.8
+    Metadata:
+      BuildMethod: python3.8
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
