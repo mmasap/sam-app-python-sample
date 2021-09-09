@@ -1,11 +1,11 @@
 import json
 import os
 import boto3
-import botostubs
+from botostubs import S3
 import datetime
 
-s3: botostubs.S3.S3Resource = boto3.resource('s3')
-bucket = s3.Bucket(os.environ['BUCKET_NAME'])
+bucket_name = os.environ['BUCKET_NAME']
+bucket: S3.S3Resource.Bucket = boto3.resource('s3').Bucket(bucket_name)
 
 
 def lambda_handler(event, context):
