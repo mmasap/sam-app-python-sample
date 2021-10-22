@@ -39,6 +39,10 @@ Globals:
         COGNITO_IDENTITY_POOL_ID: ap-northeast-1_zOhYsicQJ
   Api:
     OpenApiVersion: 3.0.2
+    Cors:
+      AllowMethods: "'*'"
+      AllowHeaders: "'*'"
+      AllowOrigin: "'*'"
 
 Resources:
   HelloWorldFunction:
@@ -117,26 +121,26 @@ Resources:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
 
-  # MyCognitoUserPool:
-  #   Type: AWS::Cognito::UserPool
-  #   Properties:
-  #     UserPoolName: !Ref CognitoUserPoolName
-  #     Policies:
-  #       PasswordPolicy:
-  #         MinimumLength: 8
-  #     UsernameAttributes:
-  #       - email
-  #     Schema:
-  #       - AttributeDataType: String
-  #         Name: email
-  #         Required: false
+  MyCognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Ref CognitoUserPoolName
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+      UsernameAttributes:
+        - email
+      Schema:
+        - AttributeDataType: String
+          Name: email
+          Required: false
 
-  # MyCognitoUserPoolClient:
-  #   Type: AWS::Cognito::UserPoolClient
-  #   Properties:
-  #     UserPoolId: !Ref MyCognitoUserPool
-  #     ClientName: !Ref CognitoUserPoolClientName
-  #     GenerateSecret: false
+  MyCognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref MyCognitoUserPool
+      ClientName: !Ref CognitoUserPoolClientName
+      GenerateSecret: false
 
   MyLayer:
     Type: AWS::Serverless::LayerVersion
